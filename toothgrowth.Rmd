@@ -1,0 +1,147 @@
+---
+title: "Analysis of the effect of vitamin C on tooth growth in guinea pigs"
+author: "Eduardo Bortoluzzi Junior"
+date: "October 20, 2015"
+output: pdf_document
+---
+
+# Synopsis
+<!-- In a few (2-3) sentences explain what is going to be reported on. -->
+The data analysed contains the length of the teeth in each of 10 guinea pigs at
+each of three dose levels of Vitamin C (0.5, 1 and 2 mg) with each of two
+delivery methods (orange juice or ascorbic acid). The growth effect of each
+pair of dose level and delivery method is analysed is this report. At least,
+with the increase of the dose, the tooth grows more.
+
+# Loading and processing the data
+
+The data with the response of the Vitamin C administration is found in the 
+ToothGrowth data frame, which is in the datasets' R package.
+
+```{r}
+library(datasets)
+library(ggplot2)
+```
+
+Let's start exploring the ToothGrowth data frame:
+
+```{r}
+str(ToothGrowth)
+```
+
+There are 3 variables:
+
+* len: the tooth length
+* supp: supplement type:
+    * VC: ascorbic acid
+    * OJ: orange juice
+* dose: dose in milligrams
+
+And there are 60 observations. We can divide the dataframe in 6 groups,
+each group with a supplement type and a specific dose. Each group has 10 
+observations.
+
+The summary of the data is shown at the plot below:
+
+```{r}
+ggplot(data=ToothGrowth, 
+       aes(x=dose , y=len, fill=supp, group=interaction(dose,supp))) + 
+geom_boxplot() +
+ggtitle("Tooth growth in guinea pigs by supplement and dose")
+```
+
+Let's test, in each dose, which supplement type effects more in the tooth growth.
+
+<!--
+The mean and the standard deviation of each group is needed to do the hypothesis
+tests:
+
+```{r}
+sample <- with(ToothGrowth, 
+               aggregate(len,
+                         by=list(dose=dose, supp=supp), 
+                         FUN=function(x) c(mean=mean(x), sd=sd(x))
+                        )
+               )
+
+sample
+```
+-->
+Using the supplement type orange juice as the base, let's make a null hypothesis
+$H_0$ being that the growth using the ascorbic acid is the same as the orange
+juice, so, $H_0: \mu_{OJ} = \mu_{VC}$. Our alternative hypothesis will be that
+the tooth grows less or more when using the ascorbic acid as the supplement, so,
+$H_a: \mu_{OJ} \neq \mu_{VC}$
+ 
+For 0.5 mg administration, the confidence interval is:
+
+```{r}
+adm <- 0.5
+with(ToothGrowth, 
+     t.test(ToothGrowth[dose==adm & supp=="VC",]$len,
+            ToothGrowth[dose==adm & supp=="OJ",]$len,
+            var.equal = FALSE,
+            paired = FALSE)$conf.int
+)
+```
+
+So, as the interval is less than 0, we reject the $H_0$ and accept $H_a$, with
+the confidence that the tooth grows less when using the ascorbic acid.
+
+For 1.0 mg administration, the confidence interval is:
+
+```{r}
+adm <- 1
+with(ToothGrowth, 
+     t.test(ToothGrowth[dose==adm & supp=="VC",]$len,
+            ToothGrowth[dose==adm & supp=="OJ",]$len,
+            var.equal = FALSE,
+            paired = FALSE)$conf.int
+)
+```
+
+The interval is also less than 0, so we also reject $H_0$ in favor of $H_a$. The
+tooth grows less when using ascorbic acid.
+
+For 2.0 mg administration, the confidence interval is:
+
+```{r}
+adm <- 2
+with(ToothGrowth, 
+     t.test(ToothGrowth[dose==adm & supp=="VC",]$len,
+            ToothGrowth[dose==adm & supp=="OJ",]$len,
+            var.equal = FALSE,
+            paired = FALSE)$conf.int
+)
+```
+
+In this case, the interval contains 0, se we fail to reject $H_0$. The tooth 
+may grow more or less than using the oranje juice supplement.
+
+For a final hypothesis test, let's give a null hypothesis that the tooth growth
+using oranje juice supplement is the same for 1.0 mg and 2.0 mg administration,
+so $H_0: \mu_{OJ.1} = \mu_{OJ.2}$. The alternative hypothesis is that they are
+different, $H_a: \mu_{OJ.1} \neq \mu_{OJ.2}$.
+
+```{r}
+with(ToothGrowth, 
+     t.test(ToothGrowth[dose==2.0 & supp=="OJ",]$len,
+            ToothGrowth[dose==1.0 & supp=="OJ",]$len,
+            var.equal = FALSE,
+            paired = FALSE)$conf.int
+)
+```
+
+The confidence interval does no have 0, and is slightly above it, so the $H_0$
+can be reject in favor of $H_a$.
+
+# Results
+
+Vitamin C administered via orange juice causes more tooth growth than using the
+acid ascorbic as the supplement, for 0.5 mg and 1.0 mg doses. For 2.0 mg dose,
+it is not conclusive, but, due the higher variance when using acid ascorbic as
+the supplement, the orange juice can be used when a more controlled discharge
+is needed.
+
+A higher tooth growth can be a problem, so it is recommend to use acid ascorbic,
+as a Vitamin C supplement, when this collateral effect needs to be minimized.
